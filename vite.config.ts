@@ -19,7 +19,7 @@ export default defineConfig({
     port: 5000,
     allowedHosts: true,
     watch: {
-      ignored: ['**/.local/**', '**/node_modules/**', '**/.git/**'],
+      ignored: ['**/.local/**', '**/node_modules/**', '**/.git/**', '**/.replit', '**/replit.nix'],
     },
     proxy: {
       '/api': {
