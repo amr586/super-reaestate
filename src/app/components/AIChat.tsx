@@ -34,7 +34,9 @@ export default function AIChat() {
         newMessages.map(m => ({ role: m.role, content: m.content })),
         chunk => { full += chunk; setStreaming(full); },
         () => {
-          setMessages(prev => [...prev, { role: 'assistant', content: full }]);
+          if (full.trim()) {
+            setMessages(prev => [...prev, { role: 'assistant', content: full }]);
+          }
           setStreaming('');
           setLoading(false);
         }
