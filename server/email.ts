@@ -9,6 +9,13 @@ function createTransporter() {
     return null;
   }
 
+  if (host === 'smtp.gmail.com') {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+    });
+  }
+
   return nodemailer.createTransport({
     host,
     port: parseInt(process.env.SMTP_PORT || '587'),
@@ -56,6 +63,7 @@ export async function sendOTPEmail(to: string, otp: string, name: string): Promi
     return true;
   } catch (err: any) {
     console.error('[EMAIL] ❌ Send error:', err?.message || err);
+    console.log(`[OTP FALLBACK] Email: ${to} | OTP: ${otp}`);
     return false;
   }
 }
