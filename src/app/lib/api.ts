@@ -72,7 +72,7 @@ export const api = {
 };
 
 // Streaming AI chat
-export async function streamChat(messages: any[], onChunk: (text: string) => void, onDone: () => void) {
+export async function streamChat(messages: any[], onChunk: (text: string) => void, onDone: () => void, onError?: (msg: string) => void) {
   const token = getToken();
   const res = await fetch(BASE_URL + '/ai/chat', {
     method: 'POST',
@@ -99,7 +99,10 @@ export async function streamChat(messages: any[], onChunk: (text: string) => voi
         const data = JSON.parse(line.slice(6));
         if (data.content) onChunk(data.content);
         if (data.done) onDone();
-        if (data.error) onDone();
+        if (data.error) {
+          if (onError) onError(data.error);
+          else onDone();
+        }
       } catch {}
     }
   }

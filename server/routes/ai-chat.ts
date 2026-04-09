@@ -4,10 +4,15 @@ import { query } from '../db.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+
+function getOpenAI() {
+  const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+  return new OpenAI({
+    apiKey: apiKey || 'no-key',
+    ...(baseURL ? { baseURL } : {}),
+  });
+}
 
 const SYSTEM_PROMPT = `أنت مساعد عقاري ذكي ومتخصص لموقع إسكنك - منصة العقارات في الإسكندرية، مصر.
 مهمتك مساعدة المستخدمين في إيجاد العقار المناسب بناءً على احتياجاتهم وفئتهم.
@@ -135,7 +140,7 @@ router.post('/chat', async (req: AuthRequest, res: Response) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const stream = await openai.chat.completions.create({
+    const stream = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemMsg },

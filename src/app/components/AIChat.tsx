@@ -36,13 +36,20 @@ export default function AIChat() {
         () => {
           if (full.trim()) {
             setMessages(prev => [...prev, { role: 'assistant', content: full }]);
+          } else {
+            setMessages(prev => [...prev, { role: 'assistant', content: 'عذراً، لم أتمكن من الرد الآن. يرجى المحاولة مرة أخرى.' }]);
           }
+          setStreaming('');
+          setLoading(false);
+        },
+        (errMsg) => {
+          setMessages(prev => [...prev, { role: 'assistant', content: `عذراً، حدث خطأ: ${errMsg}` }]);
           setStreaming('');
           setLoading(false);
         }
       );
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.' }]);
       setStreaming('');
       setLoading(false);
     }
