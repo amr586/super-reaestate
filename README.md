@@ -1,7 +1,7 @@
 
   # Real Estate Website
 
-  This is a code bundle for Real Estate Website. The original project is available at https://www.figma.com/design/pDr3Tba576WpPOVejWw9Wb/Real-Estate-Website.
+  This is a code bundle for Real Estate Website. The original project is available at https://super-reaestate.vercel.app/
 
   ## Running the code
 
