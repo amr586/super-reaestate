@@ -61,6 +61,12 @@ export default function PropertyCard({ property, index = 0, onSaved }: Props) {
       className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:shadow-purple-100/60 transition-all duration-300 group border border-gray-100"
       dir="rtl"
     >
+      {property.is_featured && (
+        <div className="bg-gradient-to-r from-yellow-400 to-amber-400 text-yellow-900 text-xs font-black px-3 py-1.5 flex items-center justify-center gap-1.5 tracking-wide">
+          ⭐ عقار مميز
+        </div>
+      )}
+
       <Link to={`/properties/${property.id}`}>
         <div className="relative overflow-hidden h-52">
           <img
@@ -93,11 +99,6 @@ export default function PropertyCard({ property, index = 0, onSaved }: Props) {
             </span>
           </div>
 
-          {property.is_featured && (
-            <div className="absolute top-10 right-3 px-2 py-0.5 rounded-md text-[10px] font-bold bg-yellow-400 text-yellow-900">
-              مميز
-            </div>
-          )}
         </div>
 
         <div className="p-4">
