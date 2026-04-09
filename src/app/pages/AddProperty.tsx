@@ -1,41 +1,102 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Building2, MapPin, DollarSign, Home, CheckCircle, Info } from 'lucide-react';
+import { Building2, MapPin, DollarSign, Home, CheckCircle, Info, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 const TYPES = ['شقة', 'فيلا', 'مكتب', 'شاليه', 'محل تجاري', 'أرض', 'دوبلكس', 'بنتهاوس'];
 const DISTRICTS = ['سيدي جابر', 'سموحة', 'المنتزه', 'العجمي', 'ستانلي', 'المندرة', 'كليوباترا', 'محطة الرمل', 'الأنفوشي', 'الميناء', 'الدخيلة', 'برج العرب'];
 
+interface UploadedImage {
+  url: string;
+  preview: string;
+  uploading?: boolean;
+  error?: string;
+}
+
 export default function AddProperty() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [form, setForm] = useState({
     title: '', title_ar: '', description: '', description_ar: '',
     type: 'شقة', purpose: 'sale', price: '', area: '',
     rooms: '', bathrooms: '', floor: '', district: 'سيدي جابر',
     city: 'الإسكندرية', address: '',
-    images: ['', '', ''],
   });
 
   const update = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
-  const updateImage = (i: number, v: string) => {
-    const imgs = [...form.images];
-    imgs[i] = v;
-    setForm(p => ({ ...p, images: imgs }));
+
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files) return;
+    const remaining = 5 - uploadedImages.length;
+    const toUpload = Array.from(files).slice(0, remaining);
+    if (toUpload.length === 0) return;
+
+    const newImages: UploadedImage[] = toUpload.map(f => ({
+      url: '',
+      preview: URL.createObjectURL(f),
+      uploading: true,
+    }));
+
+    setUploadedImages(prev => [...prev, ...newImages]);
+    const startIdx = uploadedImages.length;
+
+    for (let i = 0; i < toUpload.length; i++) {
+      const file = toUpload[i];
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'فشل الرفع');
+        setUploadedImages(prev => {
+          const updated = [...prev];
+          updated[startIdx + i] = { ...updated[startIdx + i], url: data.url, uploading: false };
+          return updated;
+        });
+      } catch (err: any) {
+        setUploadedImages(prev => {
+          const updated = [...prev];
+          updated[startIdx + i] = { ...updated[startIdx + i], uploading: false, error: 'فشل الرفع' };
+          return updated;
+        });
+      }
+    }
+  };
+
+  const removeImage = (idx: number) => {
+    setUploadedImages(prev => {
+      const updated = prev.filter((_, i) => i !== idx);
+      return updated;
+    });
   };
 
   const handleSubmit = async () => {
     if (!user) return navigate('/login');
     setError('');
+    const readyImages = uploadedImages.filter(img => img.url && !img.uploading);
+    if (readyImages.length === 0) {
+      setError('يرجى رفع صورة واحدة على الأقل');
+      return;
+    }
+    if (uploadedImages.some(img => img.uploading)) {
+      setError('يرجى الانتظار حتى تنتهي عملية رفع الصور');
+      return;
+    }
     setLoading(true);
     try {
-      const images = form.images.filter(Boolean);
       await api.addProperty({
         ...form,
         price: Number(form.price),
@@ -43,7 +104,7 @@ export default function AddProperty() {
         rooms: Number(form.rooms) || 0,
         bathrooms: Number(form.bathrooms) || 0,
         floor: Number(form.floor) || 0,
-        images,
+        images: readyImages.map(img => img.url),
       });
       setSuccess(true);
     } catch (err: any) {
@@ -63,7 +124,10 @@ export default function AddProperty() {
         <p className="text-gray-500 mb-6">سيتم مراجعة عقارك من قِبَل فريقنا وإضافته خلال 24 ساعة.</p>
         <div className="flex gap-3">
           <button onClick={() => navigate('/properties')} className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50">تصفح العقارات</button>
-          <button onClick={() => { setSuccess(false); setStep(1); setForm({ title: '', title_ar: '', description: '', description_ar: '', type: 'شقة', purpose: 'sale', price: '', area: '', rooms: '', bathrooms: '', floor: '', district: 'سيدي جابر', city: 'الإسكندرية', address: '', images: ['', '', ''] }); }}
+          <button onClick={() => {
+            setSuccess(false); setStep(1); setUploadedImages([]);
+            setForm({ title: '', title_ar: '', description: '', description_ar: '', type: 'شقة', purpose: 'sale', price: '', area: '', rooms: '', bathrooms: '', floor: '', district: 'سيدي جابر', city: 'الإسكندرية', address: '' });
+          }}
             className="flex-1 bg-[#7C3AED] text-white py-2.5 rounded-xl text-sm font-bold"
           >إضافة عقار آخر</button>
         </div>
@@ -81,7 +145,6 @@ export default function AddProperty() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Step indicator */}
         <div className="flex items-center justify-center gap-3 mb-8">
           {[{ n: 1, l: 'المعلومات الأساسية', icon: <Building2 size={16} /> }, { n: 2, l: 'التفاصيل والسعر', icon: <DollarSign size={16} /> }, { n: 3, l: 'الصور والموقع', icon: <MapPin size={16} /> }].map((s) => (
             <div key={s.n} className="flex items-center gap-2">
@@ -189,23 +252,95 @@ export default function AddProperty() {
                 <input value={form.address} onChange={e => update('address', e.target.value)} placeholder="رقم الشارع، اسم الشارع..."
                   className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#7C3AED]" />
               </div>
+
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">روابط الصور (URL)</label>
-                <p className="text-xs text-gray-400 mb-3">أضف روابط صور العقار من Unsplash أو أي مصدر آخر</p>
-                {form.images.map((img, i) => (
-                  <div key={i} className="mb-2">
-                    <input value={img} onChange={e => updateImage(i, e.target.value)}
-                      placeholder={`رابط الصورة ${i + 1}...`}
-                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#7C3AED]"
-                      dir="ltr"
-                    />
+                <label className="block text-sm font-semibold text-gray-700 mb-2">صور العقار</label>
+                <p className="text-xs text-gray-400 mb-3">ارفع حتى 5 صور من جهازك (JPG, PNG, WebP - بحد أقصى 10 ميجا للصورة)</p>
+
+                {/* Upload area */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => handleFileSelect(e.target.files)}
+                />
+
+                {uploadedImages.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-gray-200 rounded-2xl p-8 flex flex-col items-center gap-3 hover:border-[#7C3AED] hover:bg-purple-50/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center group-hover:bg-purple-100 transition-all">
+                      <Upload size={24} className="text-[#7C3AED]" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-700">اضغط لرفع الصور</p>
+                      <p className="text-xs text-gray-400 mt-1">أو اسحب الصور وأفلتها هنا</p>
+                    </div>
+                    <span className="text-xs text-purple-500 font-medium bg-purple-50 px-3 py-1 rounded-full">
+                      {uploadedImages.length}/5 صور
+                    </span>
+                  </button>
+                )}
+
+                {/* Image previews */}
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+                    {uploadedImages.map((img, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden border-2 border-gray-100 aspect-video bg-gray-50">
+                        <img
+                          src={img.preview}
+                          alt={`صورة ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {img.uploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 size={24} className="text-white animate-spin" />
+                          </div>
+                        )}
+                        {img.error && (
+                          <div className="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center gap-1">
+                            <p className="text-white text-xs font-medium">فشل الرفع</p>
+                          </div>
+                        )}
+                        {!img.uploading && !img.error && (
+                          <div className="absolute top-1.5 left-1.5 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                            <CheckCircle size={12} className="text-white" />
+                          </div>
+                        )}
+                        {idx === 0 && !img.uploading && !img.error && (
+                          <div className="absolute bottom-0 inset-x-0 bg-[#7C3AED]/80 text-white text-xs text-center py-1 font-medium">
+                            الصورة الرئيسية
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={12} className="text-white" />
+                        </button>
+                      </div>
+                    ))}
+                    {uploadedImages.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="aspect-video border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-[#7C3AED] hover:bg-purple-50/30 transition-all"
+                      >
+                        <ImageIcon size={20} className="text-gray-300" />
+                        <span className="text-xs text-gray-400">إضافة</span>
+                      </button>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
             </motion.div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-3 mt-8 pt-6 border-t border-gray-100">
             {step > 1 && (
               <button onClick={() => setStep(step - 1)} className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all">
@@ -219,7 +354,7 @@ export default function AddProperty() {
                 التالي
               </button>
             ) : (
-              <motion.button onClick={handleSubmit} disabled={loading || !form.price || !form.area}
+              <motion.button onClick={handleSubmit} disabled={loading || !form.price || !form.area || uploadedImages.some(i => i.uploading)}
                 whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                 className="flex-1 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-purple-300 disabled:opacity-50 transition-all"
               >
