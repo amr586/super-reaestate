@@ -11,10 +11,22 @@ const openai = new OpenAI({
 
 const SYSTEM_PROMPT = `أنت مساعد عقاري ذكي لموقع إسكنك - منصة العقارات في الإسكندرية، مصر.
 مهمتك مساعدة المستخدمين في إيجاد العقار المناسب بناءً على احتياجاتهم.
-تحدث بالعربية دائماً وكن ودوداً ومفيداً.
-عند سؤالك عن عقارات، اسأل عن: الميزانية، عدد الغرف، المنطقة المفضلة، الغرض (شراء/إيجار).
-المناطق المتاحة في الإسكندرية: سيدي جابر، سموحة، المنتزه، العجمي، ستانلي، المندرة، كليوباترا، محطة الرمل.
-أنواع العقارات: شقة، فيلا، مكتب، شاليه، أرض، محل تجاري.`;
+تحدث بالعربية الفصحى البسيطة دائماً وكن ودوداً ومفيداً.
+
+قواعد المحادثة:
+1. إذا لم يذكر المستخدم احتياجاته بوضوح، اسأله سؤالاً واحداً في كل مرة بالترتيب:
+   أ) الغرض: شراء أم إيجار؟
+   ب) نوع العقار: شقة، فيلا، مكتب...؟
+   ج) المنطقة المفضلة في الإسكندرية؟
+   د) الميزانية التقريبية؟
+   هـ) عدد غرف النوم؟
+2. بعد جمع المعلومات، قدّم توصيات من قائمة العقارات المتاحة.
+3. عند ذكر عقار، اكتب معرّفه هكذا: [ID:123] بعد اسم العقار مباشرة لكي يتمكن المستخدم من فتحه.
+4. قدّم 2-3 عقارات كحد أقصى في كل توصية.
+5. إذا لم تجد عقاراً مناسباً، اعتذر وانصح بتوسيع نطاق البحث.
+
+المناطق المتاحة: سيدي جابر، سموحة، المنتزه، العجمي، ستانلي، المندرة، كليوباترا، محطة الرمل، الأنفوشي، الدخيلة.
+أنواع العقارات: شقة، فيلا، مكتب، شاليه، أرض، محل تجاري، دوبلكس، بنتهاوس.`;
 
 router.post('/chat', async (req: AuthRequest, res: Response) => {
   try {
@@ -22,12 +34,13 @@ router.post('/chat', async (req: AuthRequest, res: Response) => {
 
     // Get real property data for context
     const propertiesRes = await query(`
-      SELECT title, type, purpose, price, area, rooms, district, status
-      FROM properties WHERE status='approved' LIMIT 20
+      SELECT id, title_ar, title, type, purpose, price, area, bedrooms, district
+      FROM properties WHERE status='approved' ORDER BY is_featured DESC LIMIT 30
     `);
     
-    const propertyContext = propertiesRes.rows.map(p => 
-      `${p.title}: ${p.type} للـ${p.purpose === 'sale' ? 'بيع' : 'إيجار'}, ${p.price.toLocaleString()} جنيه, ${p.rooms || 0} غرف, ${p.area}م², ${p.district}`
+    const purposeMap: Record<string,string> = { sale: 'بيع', rent: 'إيجار' };
+    const propertyContext = propertiesRes.rows.map(p =>
+      `ID:${p.id} | ${p.title_ar || p.title} | ${p.type} | ${purposeMap[p.purpose] || p.purpose} | ${Number(p.price).toLocaleString()} جنيه | ${p.bedrooms || 0} غرف | ${p.area}م² | ${p.district}`
     ).join('\n');
 
     const systemMsg = SYSTEM_PROMPT + '\n\nالعقارات المتاحة حالياً:\n' + propertyContext;

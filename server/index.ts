@@ -9,6 +9,7 @@ import adminRouter from './routes/admin.js';
 import aiChatRouter from './routes/ai-chat.js';
 import supportRouter from './routes/support.js';
 import paymentsRouter from './routes/payments.js';
+import uploadRouter from './routes/upload.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -27,6 +28,9 @@ app.use('/api/admin', adminRouter);
 app.use('/api/ai', aiChatRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/payments', paymentsRouter);
+app.use('/api/upload', uploadRouter);
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'إسكنك API' }));
 
