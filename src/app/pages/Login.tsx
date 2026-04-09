@@ -1,270 +1,128 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router';
-import { motion, AnimatePresence } from 'motion/react';
-import { Building2, Mail, Lock, Eye, EyeOff, User, Phone, AlertCircle, CheckCircle } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router';
+import { motion } from 'motion/react';
+import { Building2, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-export function Login() {
-  const { login, currentUser } = useApp();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>(
-    searchParams.get('tab') === 'register' ? 'register' : 'login'
-  );
+export default function Login() {
+  const [form, setForm] = useState({ emailOrPhone: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
-
-  useEffect(() => {
-    if (currentUser) navigate('/');
-  }, [currentUser, navigate]);
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    const success = login(loginForm.email, loginForm.password);
-    if (success) {
-      const user = JSON.parse(localStorage.getItem('estate_user') || '{}');
-      if (user.role === 'super-admin') {
-        navigate('/super-admin');
-      } else if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
-    } else {
-      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+    try {
+      await login(form.emailOrPhone, form.password);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'خطأ في تسجيل الدخول');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (registerForm.password !== registerForm.confirmPassword) {
-      setError('كلمات المرور غير متطابقة');
-      return;
-    }
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setRegisterSuccess(true);
-    setLoading(false);
-  };
-
-  const DEMO_CREDENTIALS = [
-    { role: 'سوبر أدمن', email: 'admin@estate.com', password: 'admin123' },
-    { role: 'أدمن', email: 'khaled@estate.com', password: 'admin123' },
-    { role: 'مستخدم', email: 'user@example.com', password: 'user123' },
-  ];
 
   return (
-    <div className="min-h-screen bg-[#F9F5FF] flex items-center justify-center px-4 py-20" dir="rtl">
-      {/* Background Animation */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 10, 0] }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute -top-32 -right-32 w-80 h-80 bg-[#7C3AED]/10 rounded-full filter blur-3xl"
-        />
-        <motion.div
-          animate={{ scale: [1.2, 1, 1.2], rotate: [0, -10, 0] }}
-          transition={{ duration: 12, repeat: Infinity }}
-          className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#9333EA]/10 rounded-full filter blur-3xl"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4 pt-20" dir="rtl">
+      {/* Background blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 -right-20 w-72 h-72 bg-purple-200/40 rounded-full blur-3xl animate-blob" />
+        <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-purple-300/30 rounded-full blur-3xl animate-blob-delay" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative"
       >
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-gradient-to-br from-[#7C3AED] to-[#4C1D95] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl shadow-purple-200">
-            <Building2 size={26} className="text-white" />
+        <div className="bg-white rounded-3xl shadow-2xl shadow-purple-200/50 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] px-8 pt-10 pb-8 text-center">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}
+              className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            >
+              <Building2 size={32} className="text-white" />
+            </motion.div>
+            <h1 className="text-white font-black text-2xl">إسكنك</h1>
+            <p className="text-purple-200 text-sm mt-1">تسجيل الدخول إلى حسابك</p>
           </div>
-          <h1 className="text-2xl font-black text-[#0A0A0A]">إسكنك العقارية</h1>
-          <p className="text-gray-500 text-sm">الإسكندرية، مصر</p>
-        </div>
 
-        <div className="bg-white rounded-3xl shadow-xl shadow-purple-100 border border-purple-50 overflow-hidden">
-          {/* Tabs */}
-          <div className="flex border-b border-purple-50">
-            {[
-              { key: 'login', label: 'تسجيل الدخول' },
-              { key: 'register', label: 'إنشاء حساب' },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => { setActiveTab(tab.key as 'login' | 'register'); setError(''); setRegisterSuccess(false); }}
-                className={`flex-1 py-4 text-sm font-medium transition-all relative ${
-                  activeTab === tab.key ? 'text-[#7C3AED]' : 'text-gray-400 hover:text-gray-600'
-                }`}
+          {/* Form */}
+          <div className="px-8 py-8">
+            {error && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-6 text-sm"
               >
-                {tab.label}
-                {activeTab === tab.key && (
-                  <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7C3AED]" />
-                )}
-              </button>
-            ))}
-          </div>
+                <AlertCircle size={16} />{error}
+              </motion.div>
+            )}
 
-          <div className="p-6">
-            <AnimatePresence mode="wait">
-              {activeTab === 'login' ? (
-                <motion.form
-                  key="login"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  onSubmit={handleLogin}
-                  className="space-y-4"
-                >
-                  {error && (
-                    <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3">
-                      <AlertCircle size={14} className="text-red-500" />
-                      <span className="text-red-600 text-sm">{error}</span>
-                    </div>
-                  )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">البريد الإلكتروني أو رقم الهاتف</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={form.emailOrPhone}
+                    onChange={e => setForm(p => ({ ...p, emailOrPhone: e.target.value }))}
+                    required
+                    placeholder="أدخل البريد أو رقم الهاتف"
+                    className="w-full border-2 border-gray-100 rounded-xl pr-10 pl-4 py-3 text-sm outline-none focus:border-[#7C3AED] focus:shadow-[0_0_0_4px_rgba(124,58,237,0.1)] transition-all"
+                  />
+                </div>
+              </div>
 
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1.5 block">البريد الإلكتروني</label>
-                    <div className="relative">
-                      <Mail size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="email"
-                        value={loginForm.email}
-                        onChange={e => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                        required
-                        placeholder="example@email.com"
-                        className="w-full bg-purple-50 rounded-xl pr-9 pl-3 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1.5 block">كلمة المرور</label>
-                    <div className="relative">
-                      <Lock size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={loginForm.password}
-                        onChange={e => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                        required
-                        placeholder="••••••••"
-                        className="w-full bg-purple-50 rounded-xl pr-9 pl-9 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#7C3AED]"
-                      >
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-purple-300 transition-all disabled:opacity-70"
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        جاري الدخول...
-                      </span>
-                    ) : 'تسجيل الدخول'}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">كلمة المرور</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                    required
+                    placeholder="كلمة المرور"
+                    className="w-full border-2 border-gray-100 rounded-xl pr-10 pl-10 py-3 text-sm outline-none focus:border-[#7C3AED] focus:shadow-[0_0_0_4px_rgba(124,58,237,0.1)] transition-all"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
+                </div>
+              </div>
 
-                  {/* Demo Credentials */}
-                  <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
-                    <p className="text-xs font-medium text-[#7C3AED] mb-2">حسابات تجريبية:</p>
-                    {DEMO_CREDENTIALS.map(cred => (
-                      <button
-                        key={cred.email}
-                        type="button"
-                        onClick={() => setLoginForm({ email: cred.email, password: cred.password })}
-                        className="w-full text-right text-xs text-gray-600 hover:text-[#7C3AED] py-1 transition-colors"
-                      >
-                        <span className="font-medium">{cred.role}:</span> {cred.email} / {cred.password}
-                      </button>
-                    ))}
-                  </div>
-                </motion.form>
-              ) : (
-                <motion.form
-                  key="register"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  onSubmit={handleRegister}
-                  className="space-y-3"
-                >
-                  {error && (
-                    <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3">
-                      <AlertCircle size={14} className="text-red-500" />
-                      <span className="text-red-600 text-sm">{error}</span>
-                    </div>
-                  )}
-                  {registerSuccess && (
-                    <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl p-3">
-                      <CheckCircle size={14} className="text-green-500" />
-                      <span className="text-green-700 text-sm">تم إنشاء حسابك! يمكنك تسجيل الدخول الآن.</span>
-                    </div>
-                  )}
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-purple-200 hover:shadow-purple-300 transition-all disabled:opacity-70 mt-2"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    جاري الدخول...
+                  </span>
+                ) : 'تسجيل الدخول'}
+              </motion.button>
+            </form>
 
-                  {[
-                    { name: 'name', placeholder: 'الاسم الكامل', icon: <User size={15} />, type: 'text' },
-                    { name: 'email', placeholder: 'البريد الإلكتروني', icon: <Mail size={15} />, type: 'email' },
-                    { name: 'phone', placeholder: '+20 1xxxxxxxxx', icon: <Phone size={15} />, type: 'tel' },
-                    { name: 'password', placeholder: 'كلمة المرور', icon: <Lock size={15} />, type: 'password' },
-                    { name: 'confirmPassword', placeholder: 'تأكيد كلمة المرور', icon: <Lock size={15} />, type: 'password' },
-                  ].map(field => (
-                    <div key={field.name} className="relative">
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{field.icon}</div>
-                      <input
-                        type={field.type}
-                        value={registerForm[field.name as keyof typeof registerForm]}
-                        onChange={e => setRegisterForm(prev => ({ ...prev, [field.name]: e.target.value }))}
-                        required
-                        placeholder={field.placeholder}
-                        dir={field.name === 'phone' || field.name === 'email' ? 'ltr' : 'rtl'}
-                        className="w-full bg-purple-50 rounded-xl pr-9 pl-3 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                      />
-                    </div>
-                  ))}
+            <div className="mt-6 text-center">
+              <p className="text-gray-500 text-sm">
+                ليس لديك حساب؟{' '}
+                <Link to="/register" className="text-[#7C3AED] font-semibold hover:text-purple-800 transition-colors">إنشاء حساب جديد</Link>
+              </p>
+            </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-purple-300 transition-all disabled:opacity-70"
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        جاري الإنشاء...
-                      </span>
-                    ) : 'إنشاء الحساب'}
-                  </button>
-                </motion.form>
-              )}
-            </AnimatePresence>
+            <div className="mt-4 p-3 bg-purple-50 rounded-xl text-xs text-gray-500 space-y-0.5">
+              <p className="font-semibold text-purple-700 mb-1">حسابات تجريبية:</p>
+              <p>سوبر أدمن: superadmin@iskantek.com</p>
+              <p>كلمة المرور: 123456 (لم تُعيَّن بعد - استخدم الهاش)</p>
+            </div>
           </div>
         </div>
-
-        <p className="text-center text-gray-400 text-xs mt-4">
-          بالتسجيل، أنت توافق على{' '}
-          <Link to="/terms" className="text-[#7C3AED] hover:underline">شروط الاستخدام</Link>
-          {' '}و{' '}
-          <Link to="/privacy" className="text-[#7C3AED] hover:underline">سياسة الخصوصية</Link>
-        </p>
       </motion.div>
     </div>
   );

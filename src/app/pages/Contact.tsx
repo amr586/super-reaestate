@@ -1,275 +1,138 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, MessageCircle, Facebook, Instagram, Linkedin, Send, CheckCircle, Clock } from 'lucide-react';
-import { useApp } from '../context/AppContext';
 
-export function Contact() {
-  const { addContactMessage } = useApp();
+export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addContactMessage(form);
-    setSubmitted(true);
-    setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 1000));
+    setSent(true);
+    setLoading(false);
   };
-
-  const SOCIAL_LINKS = [
-    {
-      icon: <Facebook size={20} />,
-      label: 'Facebook',
-      handle: 'amr.ahmed',
-      color: 'bg-[#1877F2]',
-      href: 'https://web.facebook.com/amr.ahmed.422543/',
-    },
-    {
-      icon: <Instagram size={20} />,
-      label: 'Instagram',
-      handle: 'amr_3hmed9',
-      color: 'bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#dc2743]',
-      href: 'https://www.instagram.com/amr_3hmed9/',
-    },
-    {
-      icon: <Linkedin size={20} />,
-      label: 'LinkedIn',
-      handle: 'عمرو أحمد',
-      color: 'bg-[#0A66C2]',
-      href: 'https://www.linkedin.com/in/%F0%9D%91%A8%F0%9D%91%B4%F0%9D%91%B9-%F0%9D%91%A8%F0%9D%91%AF%F0%9D%91%B4%F0%9D%91%AC%F0%9D%91%AB-613085328/',
-    },
-    {
-      icon: <MessageCircle size={20} />,
-      label: 'WhatsApp',
-      handle: '+20 128 137 8331',
-      color: 'bg-[#25D366]',
-      href: 'https://wa.me/201281378331',
-    },
-  ];
 
   return (
-    <div className="min-h-screen bg-[#F9F5FF] pt-20" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pt-20" dir="rtl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#7C3AED] to-[#4C1D95] py-14">
+      <div className="bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Phone size={26} className="text-white" />
-            </div>
-            <h1 className="text-white text-3xl font-black mb-2">تواصل معنا</h1>
-            <p className="text-purple-200">نحن هنا للإجابة على جميع استفساراتك</p>
-          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-white font-black text-4xl mb-3">تواصل معنا</motion.h1>
+          <p className="text-purple-200 text-lg">نحن هنا لمساعدتك في كل خطوة</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Info */}
-          <div className="space-y-5">
-            {/* Info Cards */}
+          <div className="space-y-4">
             {[
-              {
-                icon: <MapPin size={20} />,
-                title: 'العنوان',
-                lines: ['الإسكندرية، مصر', 'Alexandria, Egypt'],
-              },
-              {
-                icon: <Phone size={20} />,
-                title: 'الهاتف',
-                lines: ['+20 128 137 8331'],
-                href: 'tel:+201281378331',
-              },
-              {
-                icon: <Mail size={20} />,
-                title: 'البريد الإلكتروني',
-                lines: ['amrw4634@gmail.com'],
-                href: 'mailto:amrw4634@gmail.com',
-              },
-              {
-                icon: <Clock size={20} />,
-                title: 'ساعات العمل',
-                lines: ['السبت - الخميس', '٩ صباحاً - ١٠ مساءً'],
-              },
+              { icon: <Phone size={20} />, title: 'الهاتف', value: '+20 128 137 8331', href: 'tel:+201281378331', color: 'from-[#7C3AED] to-[#9333EA]' },
+              { icon: <Mail size={20} />, title: 'البريد الإلكتروني', value: 'amrw4634@gmail.com', href: 'mailto:amrw4634@gmail.com', color: 'from-gray-800 to-gray-900' },
+              { icon: <MessageCircle size={20} />, title: 'واتساب', value: '+20 128 137 8331', href: 'https://wa.me/201281378331', color: 'from-green-500 to-green-600' },
+              { icon: <MapPin size={20} />, title: 'الموقع', value: 'الإسكندرية، مصر', href: '#', color: 'from-[#7C3AED] to-[#4C1D95]' },
+              { icon: <Clock size={20} />, title: 'ساعات العمل', value: 'السبت - الخميس: 9ص - 9م', href: '#', color: 'from-gray-800 to-gray-900' },
             ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-2xl p-4 border border-purple-100 shadow-sm flex items-start gap-4"
+              <motion.a key={i} href={item.href} target={item.href.startsWith('http') ? '_blank' : '_self'} rel="noopener noreferrer"
+                initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                whileHover={{ x: -4 }}
+                className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-100 transition-all group"
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-[#7C3AED] to-[#9333EA] rounded-xl flex items-center justify-center flex-shrink-0 text-white">
+                <div className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 transition-transform`}>
                   {item.icon}
                 </div>
                 <div>
-                  <div className="font-bold text-[#0A0A0A] text-sm mb-0.5">{item.title}</div>
-                  {item.lines.map((line, j) => (
-                    item.href ? (
-                      <a key={j} href={item.href} className="text-gray-500 text-sm hover:text-[#7C3AED] transition-colors block" dir="ltr">
-                        {line}
-                      </a>
-                    ) : (
-                      <div key={j} className="text-gray-500 text-sm">{line}</div>
-                    )
-                  ))}
+                  <div className="text-xs text-gray-400 font-medium">{item.title}</div>
+                  <div className="text-gray-900 font-bold text-sm" dir={item.title === 'البريد الإلكتروني' || item.title === 'الهاتف' || item.title === 'واتساب' ? 'ltr' : 'rtl'}>{item.value}</div>
                 </div>
-              </motion.div>
+              </motion.a>
             ))}
 
             {/* Social */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white rounded-2xl p-5 border border-purple-100 shadow-sm"
-            >
-              <h3 className="font-bold text-[#0A0A0A] mb-4">وسائل التواصل الاجتماعي</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {SOCIAL_LINKS.map((social, i) => (
-                  <motion.a
-                    key={i}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all group"
-                  >
-                    <div className={`w-9 h-9 ${social.color} rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-sm`}>
-                      {social.icon}
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-[#0A0A0A] group-hover:text-[#7C3AED] transition-colors">{social.label}</div>
-                      <div className="text-xs text-gray-400 truncate max-w-[80px]">{social.handle}</div>
-                    </div>
-                  </motion.a>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-4 text-sm">تابعنا على</h3>
+              <div className="flex gap-3">
+                {[
+                  { color: 'bg-[#1877F2]', icon: <Facebook size={18} />, href: 'https://web.facebook.com/amr.ahmed.422543/' },
+                  { color: 'bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#dc2743]', icon: <Instagram size={18} />, href: 'https://www.instagram.com/amr_3hmed9/' },
+                  { color: 'bg-[#0A66C2]', icon: <Linkedin size={18} />, href: '#' },
+                  { color: 'bg-[#25D366]', icon: <MessageCircle size={18} />, href: 'https://wa.me/201281378331' },
+                ].map((s, i) => (
+                  <motion.a key={i} whileHover={{ scale: 1.1, y: -2 }} href={s.href} target="_blank" rel="noopener noreferrer"
+                    className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center text-white shadow-sm`}
+                  >{s.icon}</motion.a>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </div>
 
-          {/* Contact Form */}
+          {/* Form */}
           <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-purple-100"
-            >
-              {submitted ? (
-                <div className="text-center py-12">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-20 h-20 bg-gradient-to-br from-[#7C3AED] to-[#9333EA] rounded-3xl flex items-center justify-center mx-auto mb-5"
-                  >
-                    <CheckCircle size={36} className="text-white" />
-                  </motion.div>
-                  <h3 className="text-2xl font-black text-[#0A0A0A] mb-2">تم إرسال رسالتك!</h3>
-                  <p className="text-gray-500 mb-6">سيتواصل معك فريقنا في أقرب وقت ممكن. شكراً لثقتك بنا!</p>
-                  <button
-                    onClick={() => setSubmitted(false)}
-                    className="bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white px-8 py-2.5 rounded-xl text-sm font-bold"
-                  >
-                    إرسال رسالة أخرى
-                  </button>
-                </div>
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              {sent ? (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12">
+                  <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle size={40} className="text-green-500" />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 mb-2">تم الإرسال بنجاح!</h3>
+                  <p className="text-gray-500 mb-6">سيتواصل معك فريقنا في أقرب وقت ممكن.</p>
+                  <button onClick={() => setSent(false)} className="text-[#7C3AED] font-medium hover:underline text-sm">إرسال رسالة أخرى</button>
+                </motion.div>
               ) : (
                 <>
-                  <h2 className="font-black text-[#0A0A0A] text-xl mb-5">أرسل لنا رسالة</h2>
+                  <h2 className="text-xl font-black text-gray-900 mb-6">أرسل رسالة</h2>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1.5 block">الاسم الكامل *</label>
-                        <input
-                          name="name"
-                          value={form.name}
-                          onChange={handleChange}
-                          required
-                          placeholder="اسمك الكامل"
-                          className="w-full bg-purple-50 rounded-xl px-4 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1.5 block">رقم الهاتف *</label>
-                        <input
-                          name="phone"
-                          value={form.phone}
-                          onChange={handleChange}
-                          required
-                          placeholder="+20 1xxxxxxxxx"
-                          dir="ltr"
-                          className="w-full bg-purple-50 rounded-xl px-4 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1.5 block">البريد الإلكتروني</label>
-                        <input
-                          name="email"
-                          type="email"
-                          value={form.email}
-                          onChange={handleChange}
-                          placeholder="example@email.com"
-                          className="w-full bg-purple-50 rounded-xl px-4 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1.5 block">الموضوع</label>
-                        <select
-                          name="subject"
-                          value={form.subject}
-                          onChange={handleChange}
-                          className="w-full bg-purple-50 rounded-xl px-4 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors"
-                        >
-                          <option value="">اختر الموضوع</option>
-                          <option value="استفسار عن عقار">استفسار عن عقار</option>
-                          <option value="طلب بيع عقار">طلب بيع عقار</option>
-                          <option value="طلب شراء عقار">طلب شراء عقار</option>
-                          <option value="تقييم عقار">تقييم عقار</option>
-                          <option value="شكوى">شكوى</option>
-                          <option value="أخرى">أخرى</option>
-                        </select>
-                      </div>
+                      {[
+                        { name: 'name', label: 'الاسم الكامل', type: 'text', placeholder: 'اسمك' },
+                        { name: 'phone', label: 'رقم الهاتف', type: 'tel', placeholder: '01xxxxxxxxx' },
+                      ].map(f => (
+                        <div key={f.name}>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">{f.label}</label>
+                          <input type={f.type} value={form[f.name as keyof typeof form]}
+                            onChange={e => setForm(p => ({ ...p, [f.name]: e.target.value }))}
+                            required placeholder={f.placeholder}
+                            className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#7C3AED] transition-all"
+                          />
+                        </div>
+                      ))}
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1.5 block">الرسالة *</label>
-                      <textarea
-                        name="message"
-                        value={form.message}
-                        onChange={handleChange}
-                        required
-                        rows={5}
-                        placeholder="اكتب رسالتك هنا..."
-                        className="w-full bg-purple-50 rounded-xl px-4 py-2.5 text-sm outline-none border border-purple-100 focus:border-[#7C3AED] transition-colors resize-none"
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">البريد الإلكتروني</label>
+                      <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                        placeholder="email@example.com" required
+                        className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#7C3AED] transition-all"
+                        dir="ltr"
                       />
                     </div>
-                    <button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-300 transition-shadow"
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">الموضوع</label>
+                      <input type="text" value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
+                        placeholder="موضوع رسالتك" required
+                        className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#7C3AED] transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">الرسالة</label>
+                      <textarea value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
+                        rows={5} required placeholder="اكتب رسالتك هنا..."
+                        className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#7C3AED] transition-all resize-none"
+                      />
+                    </div>
+                    <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-purple-300 transition-all disabled:opacity-70"
                     >
-                      <Send size={16} />
-                      إرسال الرسالة
-                    </button>
+                      {loading ? (
+                        <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />جاري الإرسال...</span>
+                      ) : <><Send size={16} />إرسال الرسالة</>}
+                    </motion.button>
                   </form>
-
-                  {/* Quick WhatsApp */}
-                  <div className="mt-5 pt-5 border-t border-purple-50">
-                    <p className="text-center text-gray-500 text-xs mb-3">أو تواصل معنا مباشرة عبر</p>
-                    <a
-                      href="https://wa.me/201281378331"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 bg-[#25D366] text-white py-2.5 rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-green-200 transition-all"
-                    >
-                      <MessageCircle size={16} />
-                      WhatsApp: +20 128 137 8331
-                    </a>
-                  </div>
                 </>
               )}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
