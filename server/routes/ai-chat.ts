@@ -33,11 +33,12 @@ const SYSTEM_PROMPT = `أنت مساعد عقاري ذكي ومتخصص لموق
 
 3. عند ذكر عقار، اكتب معرّفه هكذا: [ID:123] بعد اسم العقار مباشرة لكي يتمكن المستخدم من فتحه.
 
-4. قدّم 2-3 عقارات كحد أقصى في كل توصية.
+4. إذا طلب المستخدم عرض كل العقارات أو كل الأسعار أو قائمة كاملة، اعرض جميع العقارات المتاحة بدون تحديد عدد.
+   أما إذا كانت توصية بناءً على احتياجاته، قدّم 3-5 عقارات الأنسب فقط.
 
 5. إذا لم تجد عقاراً مناسباً تماماً، اعتذر وانصح بتوسيع نطاق البحث أو تعديل الميزانية.
 
-6. عند توصية بعقار، استخدم دائماً هذا القالب الموحد لكل عقار:
+6. عند ذكر أي عقار، استخدم دائماً هذا القالب الموحد لكل عقار:
 
 🏠 [اسم العقار] [ID:رقم]
 📍 الموقع: [المنطقة] - [العنوان إن وجد]
@@ -126,7 +127,7 @@ router.post('/chat', async (req: AuthRequest, res: Response) => {
 
     const propertiesRes = await query(`
       SELECT id, title_ar, title, type, purpose, price, area, bedrooms, bathrooms, floor, district, address
-      FROM properties WHERE status='approved' ORDER BY is_featured DESC, created_at DESC LIMIT 50
+      FROM properties WHERE status='approved' ORDER BY is_featured DESC, created_at DESC LIMIT 100
     `);
     
     const purposeMap: Record<string,string> = { sale: 'للبيع', rent: 'للإيجار' };
@@ -147,7 +148,7 @@ router.post('/chat', async (req: AuthRequest, res: Response) => {
         ...messages
       ],
       stream: true,
-      max_completion_tokens: 1200,
+      max_completion_tokens: 3000,
       temperature: 0.7,
     });
 
