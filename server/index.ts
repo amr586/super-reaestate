@@ -26,6 +26,6 @@ app.use('/api/payments', paymentsRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'إسكنك API' }));
 
-app.listen(PORT, 'localhost', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🏠 إسكنك API running on port ${PORT}`);
 });

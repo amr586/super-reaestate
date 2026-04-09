@@ -21,6 +21,9 @@ export default function AdminDashboard() {
     if (!user) { navigate('/login'); return; }
     if (!isAdmin) { navigate('/dashboard'); return; }
     if (isSuperAdmin) { navigate('/superadmin'); return; }
+    if (subRole && ['data_entry', 'property_manager', 'analytics', 'support'].includes(subRole)) {
+      navigate('/sub-admin'); return;
+    }
     loadData();
   }, [user]);
 

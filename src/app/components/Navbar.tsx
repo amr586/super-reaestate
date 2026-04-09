@@ -8,7 +8,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { user, logout, isAdmin, isSuperAdmin } = useAuth();
+  const { user, logout, isAdmin, isSuperAdmin, subRole } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -92,7 +92,7 @@ export default function Navbar() {
                         </Link>
                       )}
                       {isAdmin && (
-                        <Link to="/admin" className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-purple-50 text-gray-800 transition-colors">
+                        <Link to={subRole ? '/sub-admin' : '/admin'} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-purple-50 text-gray-800 transition-colors">
                           <LayoutDashboard size={16} className="text-[#7C3AED]" />لوحة الإدارة
                         </Link>
                       )}
@@ -145,7 +145,7 @@ export default function Navbar() {
                       <span className="text-sm font-medium">{user.name}</span>
                     </div>
                     {isSuperAdmin && <Link to="/superadmin" className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-[#7C3AED] hover:bg-purple-50"><ShieldCheck size={16} />سوبر أدمن</Link>}
-                    {isAdmin && <Link to="/admin" className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm hover:bg-purple-50"><LayoutDashboard size={16} className="text-[#7C3AED]" />لوحة الإدارة</Link>}
+                    {isAdmin && <Link to={subRole ? '/sub-admin' : '/admin'} className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm hover:bg-purple-50"><LayoutDashboard size={16} className="text-[#7C3AED]" />لوحة الإدارة</Link>}
                     <Link to="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm hover:bg-purple-50"><User size={16} className="text-[#7C3AED]" />حسابي</Link>
                     <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50"><LogOut size={16} />تسجيل الخروج</button>
                   </>

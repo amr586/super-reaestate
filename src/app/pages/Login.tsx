@@ -117,9 +117,13 @@ export default function Login() {
             </div>
 
             <div className="mt-4 p-3 bg-purple-50 rounded-xl text-xs text-gray-500 space-y-0.5">
-              <p className="font-semibold text-purple-700 mb-1">حسابات تجريبية:</p>
-              <p>سوبر أدمن: superadmin@iskantek.com</p>
-              <p>كلمة المرور: 123456 (لم تُعيَّن بعد - استخدم الهاش)</p>
+              <p className="font-semibold text-purple-700 mb-1">حسابات تجريبية (كلمة المرور: Admin@2024):</p>
+              <p>🔵 سوبر أدمن: superadmin@iskantek.com</p>
+              <p>🟢 داتا إنتري: dataentry@iskantek.com</p>
+              <p>🟡 مدير عقارات: propmanager@iskantek.com</p>
+              <p>🟠 تحليلات: analytics@iskantek.com</p>
+              <p>🔴 دعم فني: support@iskantek.com</p>
+              <p>⚪ مستخدم: user@example.com (User@2024)</p>
             </div>
           </div>
         </div>

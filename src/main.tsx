@@ -12,7 +12,9 @@ import Contact from './app/pages/Contact';
 import AddProperty from './app/pages/AddProperty';
 import SuperAdminDashboard from './app/pages/SuperAdminDashboard';
 import AdminDashboard from './app/pages/AdminDashboard';
+import SubAdminDashboard from './app/pages/SubAdminDashboard';
 import UserDashboard from './app/pages/UserDashboard';
+import PaymentPage from './app/pages/PaymentPage';
 import './styles/globals.css';
 
 const router = createBrowserRouter([
@@ -29,7 +31,9 @@ const router = createBrowserRouter([
       { path: 'add-property', element: <AddProperty /> },
       { path: 'dashboard', element: <UserDashboard /> },
       { path: 'admin', element: <AdminDashboard /> },
+      { path: 'sub-admin', element: <SubAdminDashboard /> },
       { path: 'superadmin', element: <SuperAdminDashboard /> },
+      { path: 'payment/:id', element: <PaymentPage /> },
     ],
   },
 ]);
