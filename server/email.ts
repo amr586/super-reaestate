@@ -1,11 +1,11 @@
 import nodemailer from 'nodemailer';
 
 function createTransporter() {
-  const host = process.env.SMTP_HOST;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  if (!host || !user || !pass) {
+  if (!user || !pass) {
     return null;
   }
 
@@ -14,6 +14,7 @@ function createTransporter() {
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: process.env.SMTP_PORT === '465',
     auth: { user, pass },
+    tls: { rejectUnauthorized: false },
   });
 }
 
@@ -22,12 +23,14 @@ export async function sendOTPEmail(to: string, otp: string, name: string): Promi
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
 
   if (!transporter || !from) {
-    console.log(`[OTP DEV] Email: ${to} | OTP: ${otp}`);
+    console.log(`[OTP DEV - NO SMTP] Email: ${to} | OTP: ${otp}`);
     return true;
   }
 
+  console.log(`[EMAIL] Sending OTP to: ${to} via ${process.env.SMTP_HOST || 'smtp.gmail.com'}`);
+
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"إسكنك العقارية" <${from}>`,
       to,
       subject: 'رمز التحقق - إسكنك',
@@ -49,9 +52,10 @@ export async function sendOTPEmail(to: string, otp: string, name: string): Promi
         </div>
       `,
     });
+    console.log(`[EMAIL] ✅ OTP sent successfully to: ${to} (${info.messageId})`);
     return true;
-  } catch (err) {
-    console.error('Email send error:', err);
+  } catch (err: any) {
+    console.error('[EMAIL] ❌ Send error:', err?.message || err);
     return false;
   }
 }
