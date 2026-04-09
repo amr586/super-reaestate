@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutDashboard, Building2, Users, FileText, MessageSquare, CheckCircle, XCircle, Clock, LogOut, Eye, CreditCard, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, CheckCircle, XCircle, Clock, LogOut, Eye, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import PropertyDetailModal from '../components/PropertyDetailModal';
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=200&h=120&fit=crop';
 
@@ -13,9 +14,9 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
@@ -73,13 +74,23 @@ export default function AdminDashboard() {
     { id: 'payments', label: 'المدفوعات', icon: <CreditCard size={16} />, badge: pendingPayments.length },
   ];
 
-  // Filter tabs based on sub_role
   const visibleTabs = subRole === 'data_entry' ? tabs.filter(t => t.id !== 'payments')
     : subRole === 'analytics' ? [tabs[0]]
     : tabs;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20" dir="rtl">
+      <AnimatePresence>
+        {selectedPropertyId !== null && (
+          <PropertyDetailModal
+            propertyId={selectedPropertyId}
+            onClose={() => setSelectedPropertyId(null)}
+            onApprove={() => approveProperty(selectedPropertyId)}
+            onReject={() => rejectProperty(selectedPropertyId)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
@@ -94,7 +105,6 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Link to="/superadmin" className="bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-sm font-medium hidden">سوبر أدمن</Link>
               <button onClick={() => { logout(); navigate('/'); }} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-sm font-medium">
                 <LogOut size={15} />خروج
               </button>
@@ -149,7 +159,11 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {pendingProps.slice(0, 5).map(p => (
-                        <PropertyReviewItem key={p.id} property={p} onApprove={() => approveProperty(p.id)} onReject={() => rejectProperty(p.id)} />
+                        <PropertyReviewItem key={p.id} property={p}
+                          onApprove={() => approveProperty(p.id)}
+                          onReject={() => rejectProperty(p.id)}
+                          onDetails={() => setSelectedPropertyId(p.id)}
+                        />
                       ))}
                     </div>
                   )}
@@ -182,6 +196,7 @@ export default function AdminDashboard() {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 text-sm line-clamp-1">{p.title_ar || p.title}</div>
                         <div className="text-gray-400 text-xs mt-0.5">{p.district} · {Number(p.price).toLocaleString()} جنيه</div>
+                        {p.owner_name && <div className="text-gray-400 text-xs mt-0.5">👤 {p.owner_name} {p.owner_phone && `· ${p.owner_phone}`}</div>}
                       </div>
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-bold flex-shrink-0 ${({ pending: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', sold: 'bg-gray-100 text-gray-600' } as Record<string, string>)[p.status] || ''}`}>
                         {({ pending: 'مراجعة', approved: 'موافق', rejected: 'مرفوض', sold: 'مباع' } as Record<string, string>)[p.status] || p.status}
@@ -200,9 +215,9 @@ export default function AdminDashboard() {
                         {p.status === 'approved' && (
                           <button onClick={() => markSold(p.id)} className="px-3 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs text-gray-600 transition-colors font-medium">مباع</button>
                         )}
-                        <Link to={`/properties/${p.id}`} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-[#7C3AED] transition-colors">
+                        <button onClick={() => setSelectedPropertyId(p.id)} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-[#7C3AED] transition-colors" title="تفاصيل">
                           <Eye size={15} />
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -231,28 +246,31 @@ export default function AdminDashboard() {
   );
 }
 
-function PropertyReviewItem({ property, onApprove, onReject }: { property: any; onApprove: () => void; onReject: () => void; }) {
+function PropertyReviewItem({ property, onApprove, onReject, onDetails }: { property: any; onApprove: () => void; onReject: () => void; onDetails: () => void }) {
   return (
     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
       <img src={property.primary_image || DEFAULT_IMAGE} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
         onError={e => { (e.target as HTMLImageElement).src = DEFAULT_IMAGE; }} />
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm text-gray-900 line-clamp-1">{property.title_ar || property.title}</div>
-        <div className="text-xs text-gray-400">{property.district}</div>
+        <div className="text-xs text-gray-400">{property.district} · {property.owner_name}</div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
+        <button onClick={onDetails} className="w-8 h-8 bg-purple-100 text-[#7C3AED] rounded-lg flex items-center justify-center hover:bg-purple-200 transition-colors" title="تفاصيل">
+          <Eye size={13} />
+        </button>
         <button onClick={onApprove} className="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors">
-          <CheckCircle size={14} />
+          <CheckCircle size={13} />
         </button>
         <button onClick={onReject} className="w-8 h-8 bg-red-500 text-white rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors">
-          <XCircle size={14} />
+          <XCircle size={13} />
         </button>
       </div>
     </div>
   );
 }
 
-function PaymentItem({ payment, onApprove }: { payment: any; onApprove: () => void; }) {
+function PaymentItem({ payment, onApprove }: { payment: any; onApprove: () => void }) {
   return (
     <div className="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
       <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">

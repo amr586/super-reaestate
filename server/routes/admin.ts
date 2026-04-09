@@ -28,11 +28,29 @@ router.get('/stats', authenticate, requireAdmin, async (_req: AuthRequest, res: 
 router.get('/properties', authenticate, requireAdmin, async (_req: AuthRequest, res: Response) => {
   try {
     const result = await query(`
-      SELECT p.*, u.name as owner_name,
-        (SELECT pi.url FROM property_images pi WHERE pi.property_id = p.id AND pi.is_primary=true LIMIT 1) as primary_image
+      SELECT p.*,
+        u.name as owner_name, u.email as owner_email, u.phone as owner_phone, u.created_at as owner_joined,
+        (SELECT pi.url FROM property_images pi WHERE pi.property_id = p.id AND pi.is_primary=true LIMIT 1) as primary_image,
+        (SELECT json_agg(pi.url) FROM property_images pi WHERE pi.property_id = p.id) as images
       FROM properties p LEFT JOIN users u ON u.id = p.owner_id ORDER BY p.created_at DESC
     `);
     res.json(result.rows);
+  } catch {
+    res.status(500).json({ error: 'خطأ' });
+  }
+});
+
+router.get('/properties/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await query(`
+      SELECT p.*,
+        u.name as owner_name, u.email as owner_email, u.phone as owner_phone, u.created_at as owner_joined,
+        u.id as owner_user_id,
+        (SELECT json_agg(pi.url ORDER BY pi.is_primary DESC) FROM property_images pi WHERE pi.property_id = p.id) as images
+      FROM properties p LEFT JOIN users u ON u.id = p.owner_id WHERE p.id=$1
+    `, [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'العقار غير موجود' });
+    res.json(result.rows[0]);
   } catch {
     res.status(500).json({ error: 'خطأ' });
   }

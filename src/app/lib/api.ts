@@ -24,6 +24,10 @@ export const api = {
     request('/auth/login', { method: 'POST', body: JSON.stringify({ emailOrPhone, password }) }),
   register: (data: { name: string; email: string; phone: string; password: string }) =>
     request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  sendOTP: (data: { name: string; email: string; phone: string; password: string }) =>
+    request('/auth/send-otp', { method: 'POST', body: JSON.stringify(data) }),
+  verifyOTP: (email: string, otp: string) =>
+    request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
   me: () => request('/auth/me'),
 
   // Properties
@@ -41,6 +45,7 @@ export const api = {
   // Admin
   getStats: () => request('/admin/stats'),
   getAllProperties: () => request('/admin/properties'),
+  getAdminProperty: (id: number) => request(`/admin/properties/${id}`),
   approveProperty: (id: number) => request(`/admin/properties/${id}/approve`, { method: 'PATCH' }),
   rejectProperty: (id: number) => request(`/admin/properties/${id}/reject`, { method: 'PATCH' }),
   markSold: (id: number, buyer_id?: number) => request(`/admin/properties/${id}/sold`, { method: 'PATCH', body: JSON.stringify({ buyer_id }) }),

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import PropertyDetailModal from '../components/PropertyDetailModal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RPieChart, Pie, Cell, Legend } from 'recharts';
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=200&h=120&fit=crop';
@@ -52,6 +53,7 @@ export default function SubAdminDashboard() {
   const [replyMsg, setReplyMsg] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
@@ -185,6 +187,16 @@ export default function SubAdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
+      <AnimatePresence>
+        {selectedPropertyId !== null && (
+          <PropertyDetailModal
+            propertyId={selectedPropertyId}
+            onClose={() => setSelectedPropertyId(null)}
+            onApprove={() => handleApprove(selectedPropertyId)}
+            onReject={() => handleReject(selectedPropertyId)}
+          />
+        )}
+      </AnimatePresence>
       <div className={`bg-gradient-to-r ${roleColor} py-8 px-4 sm:px-8`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -320,9 +332,9 @@ export default function SubAdminDashboard() {
                               >
                                 <XCircle size={14} />رفض
                               </button>
-                              <Link to={`/properties/${prop.id}`} className="flex items-center gap-1.5 bg-purple-50 text-[#7C3AED] px-4 py-2 rounded-xl text-sm font-medium">
-                                <Eye size={14} />عرض
-                              </Link>
+                              <button onClick={() => setSelectedPropertyId(prop.id)} className="flex items-center gap-1.5 bg-purple-50 text-[#7C3AED] px-4 py-2 rounded-xl text-sm font-medium hover:bg-purple-100 transition-colors">
+                                <Eye size={14} />تفاصيل
+                              </button>
                             </div>
                           </div>
                         </div>
